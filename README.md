@@ -24,4 +24,3 @@ El sistema cumple con todos los requisitos de la Versión 1:
 - `/satelite`: Código para el Arduino Satélite (Mac).  
 - `/tierra`: Código para el Arduino de la Estación de Tierra (Windows).  
 - `/interfaz`: Código fuente en Python para la interfaz de usuario.  
-- `/tests_unitarios`: Programas de diagnóstico individual.
