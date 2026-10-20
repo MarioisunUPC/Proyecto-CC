@@ -27,6 +27,8 @@ def AClick ():        #boton iniciar
         verificar_timeout()
     
 
+
+
 def BClick ():        #boton parar
     mySerial.write("Parar\n".encode('utf-8'))
     print("Comando: Parar")
@@ -48,6 +50,8 @@ def verificar_timeout():
             ultimo_tiempo_recepcion = tiempo_actual
 
         window.after(1000, verificar_timeout)
+
+
 
 
 def recepcion():
@@ -75,6 +79,8 @@ def recepcion():
                 ax.set_ylabel("Temperatura (ºC)")
                 ax.grid(False)
                 canvas.draw()
+
+
 
 
 window = Tk()
