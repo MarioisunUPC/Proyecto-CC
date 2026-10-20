@@ -4,7 +4,7 @@ Repositorio correspondiente a la **Versión 1** del proyecto de sistemas satelit
 
 ## Demostración del Sistema
 
-**\[INSERTA AQUÍ EL ENLACE A VUESTRO VÍDEO\]** *(Nota: El vídeo muestra la interfaz de Python funcionando de forma sincronizada con el hardware físico).*
+vídeo
 
 ## Funcionalidades Implementadas
 
