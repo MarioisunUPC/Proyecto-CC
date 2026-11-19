@@ -1,7 +1,5 @@
 /*
- * ============================================================
  *  ARDUINO SATÉLITE - Versión 2
- * ============================================================
  *  - Lee temperatura/humedad (DHT11) y la envía periódicamente.
  *  - Calcula (si se le pide) la media de las 10 últimas temperaturas.
  *  - Radar de 360º: dos HC-SR04 montados espalda con espalda sobre
@@ -39,7 +37,6 @@
  *  así que repetirlos no tiene efectos secundarios. La interfaz los envía
  *  dos veces para no perderlos si llegan mientras este Arduino transmite
  *  (SoftwareSerial no puede recibir y transmitir a la vez).
- * ============================================================
  */
 
 #include <DHT.h>
@@ -55,7 +52,7 @@ const int PIN_TX = 11;     // TX software (va al RX del Arduino de tierra)
   SoftwareSerial enlace(PIN_RX, PIN_TX);
 #endif
 
-// ----------------------------- PINES -----------------------------
+// PINES 
 const int PIN_DHT    = 2;
 const int PIN_TRIG   = 7;   // Sensor frontal
 const int PIN_ECHO   = 6;
@@ -67,7 +64,7 @@ const int PIN_LED_TX = 8;
 #define DHTTYPE DHT11
 const long BAUDIOS = 9600;
 
-// ------------- PERIODOS (modificables desde tierra) --------------
+// PERIODOS (modificables desde tierra) 
 unsigned long periodoTH_MS   = 3000;
 unsigned long periodoDist_MS = 100;
 const unsigned long PERIODO_TH_MIN   = 1000,  PERIODO_TH_MAX   = 60000;
@@ -82,7 +79,7 @@ const unsigned long ECHO_INICIO_US     = 5000;   // Máx. espera a que ECHO suba
 const unsigned long ECHO_TIMEOUT_US    = 12000;  // Máx. duración del eco (~2 m)
 const int NUM_FALLOS_DIST = 20;                  // Medidas seguidas sin respuesta -> alarma
 
-// ------------------------ CONFIGURACIÓN SERVO ---------------------
+// CONFIGURACIÓN SERVO 
 const int PASO_SERVO      = 1;
 const int ANGULO_MIN      = 0;
 const int ANGULO_MAX      = 180;
@@ -94,7 +91,7 @@ const int N_MEDIA = 10;     // Nº de temperaturas para la media
 
 DHT dht(PIN_DHT, DHTTYPE);
 
-// ---------------------- ESTADO DEL SATÉLITE -----------------------
+//  ESTADO DEL SATÉLITE 
 int  angulo      = 90;      // Ángulo actual del servo (0-180)
 bool modoManual  = false;   // Joystick
 bool modoFijo    = false;   // Ángulo fijado desde la interfaz
@@ -124,20 +121,16 @@ unsigned long tLedTx = 0;
 char bufferRx[32];
 byte idxRx = 0;
 
-// =================================================================
 //  UTILIDADES
-// =================================================================
 
-/* Enciende el LED de transmisión (se apaga solo en gestionarLedTx).
- * Parámetros: ninguno. Resultado: ninguno. */
+// Enciende el LED de transmisión (se apaga solo en gestionarLedTx).
 void encenderLedTx() {
   digitalWrite(PIN_LED_TX, HIGH);
   ledEncendido = true;
   tLedTx = millis();
 }
 
-/* Apaga el LED de transmisión cuando ha pasado DURACION_LED_MS.
- * Parámetros: ninguno. Resultado: ninguno. */
+// Apaga el LED de transmisión cuando ha pasado DURACION_LED_MS.
 void gestionarLedTx() {
   if (ledEncendido && (millis() - tLedTx >= DURACION_LED_MS)) {
     digitalWrite(PIN_LED_TX, LOW);
@@ -145,10 +138,8 @@ void gestionarLedTx() {
   }
 }
 
-/* Lee caracteres de un canal serie sin bloquear y va formando una línea.
- * Parámetros: canal (puerto), buf (buffer destino), idx (posición actual,
- *   se conserva entre llamadas), tam (tamaño del buffer).
- * Resultado: true cuando hay una línea completa (no vacía) en buf. */
+// Lee caracteres de un canal serie sin bloquear y va formando una línea.
+ 
 bool leerLinea(Stream &canal, char *buf, byte &idx, byte tam) {
   while (canal.available()) {
     char c = canal.read();
@@ -165,16 +156,11 @@ bool leerLinea(Stream &canal, char *buf, byte &idx, byte tam) {
   return false;
 }
 
-// =================================================================
 //  SENSORES DE DISTANCIA (HC-SR04)
-// =================================================================
 
 /* Mide la distancia con un HC-SR04.
  * Distingue "no hay obstáculo" (el sensor responde pero el eco no vuelve)
- * de "sensor averiado/desconectado" (el pin ECHO nunca se pone a HIGH).
- * Parámetros: pinTrig, pinEcho (pines del sensor); sensorOk (salida: false
- *   si el sensor no ha respondido).
- * Resultado: distancia en cm, o -1 si no hay eco válido. */
+ * de "sensor averiado/desconectado" (el pin ECHO nunca se pone a HIGH). */
 long medirDistanciaCm(int pinTrig, int pinEcho, bool &sensorOk) {
   sensorOk = true;
   if (digitalRead(pinEcho) == HIGH) return -1;   // Aún ocupado con la medida anterior
@@ -204,27 +190,22 @@ long medirDistanciaCm(int pinTrig, int pinEcho, bool &sensorOk) {
   return cm;
 }
 
-/* Actualiza el contador de fallos de un sensor de distancia.
- * Parámetros: ok (el sensor ha respondido), contador (fallos seguidos).
- * Resultado: ninguno (modifica contador). */
+// Actualiza el contador de fallos de un sensor de distancia.
+ 
 void contarFallo(bool ok, int &contador) {
   if (ok) contador = 0;
   else if (contador < NUM_FALLOS_DIST) contador++;
 }
 
-// =================================================================
 //  SERVO (Timer1 en modo PWM, 50 Hz)
-// =================================================================
 
-/* Mueve el servo al ángulo indicado.
- * Parámetros: grados (0-180). Resultado: ninguno. */
+// Mueve el servo al ángulo indicado.
 void servoEscribir(int grados) {
   long us = map(grados, 0, 180, SERVO_US_MIN, SERVO_US_MAX);
   OCR1A = us * 2;                                  // Tick de 0,5 us (prescaler 8)
 }
 
-/* Configura el Timer1 para generar la señal del servo y lo coloca.
- * Parámetros: grados (ángulo inicial). Resultado: ninguno. */
+// Configura el Timer1 para generar la señal del servo y lo coloca.
 void servoIniciar(int grados) {
   pinMode(PIN_SERVO, OUTPUT);
   TCCR1A = _BV(COM1A1) | _BV(WGM11);               // Fast PWM, TOP = ICR1
@@ -234,9 +215,7 @@ void servoIniciar(int grados) {
 }
 
 /* Orienta el radar hacia una dirección de 0 a 359º.
- * De 0 a 180 apunta el sensor frontal; de 181 a 359 se gira el servo
- * a (ang - 180) para que sea el sensor trasero el que apunte.
- * Parámetros: ang (grados 0-359). Resultado: ninguno. */
+ * De 0 a 180 apunta el sensor frontal; de 181 a 359 se gira el servo a (ang - 180) para que sea el sensor trasero el que apunte.*/
 void fijarAngulo(long ang) {
   ang = ((ang % 360) + 360) % 360;
   angulo = (ang <= 180) ? ang : ang - 180;
@@ -246,13 +225,10 @@ void fijarAngulo(long ang) {
   servoEscribir(angulo);
 }
 
-// =================================================================
 //  RECEPCIÓN DE COMANDOS
-// =================================================================
 
-/* Interpreta un comando recibido de tierra (ver protocolo arriba).
- * Parámetros: cmd (línea recibida, p. ej. "6:200").
- * Resultado: ninguno (modifica el estado del satélite). */
+// Interpreta un comando recibido de tierra (ver protocolo arriba).
+ 
 void procesarComando(char *cmd) {
   char *sep = strchr(cmd, ':');
   if (sep == NULL || sep == cmd) return;          // Sin código: se ignora
@@ -310,21 +286,16 @@ void procesarComando(char *cmd) {
   }
 }
 
-/* Comprueba si ha llegado un comando completo y lo procesa.
- * Parámetros: ninguno. Resultado: ninguno. */
+// Comprueba si ha llegado un comando completo y lo procesa.
 void tareaRecepcion() {
   if (leerLinea(enlace, bufferRx, idxRx, sizeof(bufferRx))) {
     procesarComando(bufferRx);
   }
 }
 
-// =================================================================
 //  TAREAS PERIÓDICAS
-// =================================================================
 
-/* Mueve el servo según el modo: fijo (no se mueve), manual (joystick)
- * o rastreo (barrido continuo 0-180-0).
- * Parámetros: ninguno. Resultado: ninguno. */
+// Mueve el servo según el modo: fijo (no se mueve), manual (joystick) o rastreo (barrido continuo 0-180-0).
 void tareaServo() {
   if (millis() - ultimoServo < PERIODO_SERVO_MS) return;
   ultimoServo = millis();
@@ -343,10 +314,8 @@ void tareaServo() {
   servoEscribir(angulo);
 }
 
-/* Mide con los dos sensores y envía la trama 2:<distF>:<distT>:<ang>:<modo>.
- * Si el envío está parado manda distancias -2 (para que tierra siga
- * viendo el ángulo y el modo). Actualiza la detección de fallos.
- * Parámetros: ninguno. Resultado: ninguno. */
+// Mide con los dos sensores y envía la trama 2:<distF>:<distT>:<ang>:<modo>.
+// Si el envío está parado manda distancias -2 (para que tierra siga viendo el ángulo y el modo). Actualiza la detección de fallos. 
 void tareaDistancia() {
   if (millis() - ultimoDist < periodoDist_MS) return;
   ultimoDist = millis();
@@ -374,16 +343,14 @@ void tareaDistancia() {
   encenderLedTx();
 }
 
-/* Guarda una temperatura en la cola circular del satélite.
- * Parámetros: t (temperatura en ºC). Resultado: ninguno. */
+//Guarda una temperatura en la cola circular del satélite.
 void guardarTemperatura(float t) {
   temps[idxTemp] = t;
   idxTemp = (idxTemp + 1) % N_MEDIA;
   if (conteoTemps < N_MEDIA) conteoTemps++;
 }
 
-/* Calcula la media de las temperaturas guardadas.
- * Parámetros: ninguno. Resultado: media en ºC (0 si no hay datos). */
+// Calcula la media de las temperaturas guardadas.
 float mediaTemperaturas() {
   if (conteoTemps == 0) return 0;
   float suma = 0;
@@ -391,9 +358,7 @@ float mediaTemperaturas() {
   return suma / conteoTemps;
 }
 
-/* Lee el DHT11, detecta fallos y envía 1:<t>:<h> (y 6:<media> si la
- * media se calcula en el satélite).
- * Parámetros: ninguno. Resultado: ninguno. */
+// Lee el DHT11, detecta fallos y envía 1:<t>:<h> (y 6:<media> si la media se calcula en el satélite).
 void tareaTemperatura() {
   if (millis() - ultimoTH < periodoTH_MS) return;
   ultimoTH = millis();
@@ -424,8 +389,7 @@ void tareaTemperatura() {
   encenderLedTx();
 }
 
-/* Envía el latido y, si procede, las alarmas de fallo de sensores.
- * Parámetros: ninguno. Resultado: ninguno. */
+// Envía el latido y, si procede, las alarmas de fallo de sensores.
 void tareaLatido() {
   if (millis() - ultimoLatido < PERIODO_LATIDO_MS) return;
   ultimoLatido = millis();
@@ -435,7 +399,6 @@ void tareaLatido() {
   enlace.println("4:");
 }
 
-// =================================================================
 
 void setup() {
   pinMode(PIN_LED_TX, OUTPUT);
