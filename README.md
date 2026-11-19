@@ -63,7 +63,7 @@ Cada mensaje es una línea de texto con campos separados por `:`; el primer camp
   - `test_validacion_tramas`: validación de tramas en el Arduino de tierra (no necesita sensores).
   - `test_media_satelite`: media de temperaturas del satélite (no necesita sensores).
 ## Uso de IA
-Hemos usado Claude (Anthropic) como apoyo en la versión 2. Nos ayudó a:
+Hemos usado la IA como apoyo en la versión 2. Nos ayudó a:
 - Reorganizar y estructurar el código (separar protocolos.py y cola_circular.py, comentar el protocolo y documentar cada función).
 - Detectar y corregir errores (p. ej. pérdida de comandos por SoftwareSerial, validación de tramas en el Arduino de tierra).
 - Configurar el servo (Timer1) y el joystick (calibración y zona muerta con histéresis).
