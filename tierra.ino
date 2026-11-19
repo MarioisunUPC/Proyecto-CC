@@ -1,7 +1,5 @@
 /*
- * ============================================================
  *  ARDUINO DE TIERRA - Versión 2
- * ============================================================
  *  Hace de puente entre el satélite (SoftwareSerial) y el PC (Serial/USB):
  *  - Satélite -> PC: valida cada trama y la reenvía al PC. Enciende LEDs
  *    de recepción y de alarma.
@@ -54,10 +52,7 @@ int joyCentro = 512;
 bool ledRxEncendido = false;
 unsigned long tLedRx = 0;
 
-/* Lee caracteres de un canal serie sin bloquear y va formando una línea.
- * Parámetros: canal (puerto), buf (buffer destino), idx (posición actual),
- *   tam (tamaño del buffer).
- * Resultado: true cuando hay una línea completa (no vacía) en buf. */
+// Lee caracteres de un canal serie sin bloquear y va formando una línea.
 bool leerLinea(Stream &canal, char *buf, byte &idx, byte tam) {
   while (canal.available()) {
     char c = canal.read();
@@ -74,16 +69,14 @@ bool leerLinea(Stream &canal, char *buf, byte &idx, byte tam) {
   return false;
 }
 
-/* Enciende el LED de recepción (se apaga solo en gestionarLedRx).
- * Parámetros: ninguno. Resultado: ninguno. */
+// Enciende el LED de recepción (se apaga solo en gestionarLedRx).
 void parpadearLedRx() {
   digitalWrite(PIN_LED_RX, HIGH);
   ledRxEncendido = true;
   tLedRx = millis();
 }
 
-/* Apaga el LED de recepción cuando ha pasado DURACION_LED_MS.
- * Parámetros: ninguno. Resultado: ninguno. */
+// Apaga el LED de recepción cuando ha pasado DURACION_LED_MS.
 void gestionarLedRx() {
   if (ledRxEncendido && (millis() - tLedRx >= DURACION_LED_MS)) {
     digitalWrite(PIN_LED_RX, LOW);
@@ -91,11 +84,9 @@ void gestionarLedRx() {
   }
 }
 
-/* Comprueba que una trama del satélite tiene el formato del protocolo.
- * Sirve para descartar líneas corrompidas en el enlace (SoftwareSerial
- * pierde bytes si recibe mientras transmite).
- * Parámetros: l (línea sin '\n').
- * Resultado: true si la trama es válida. */
+//Comprueba que una trama del satélite tiene el formato del protocolo.
+//Sirve para descartar líneas corrompidas en el enlace (SoftwareSerial pierde bytes si recibe mientras transmite).
+
 bool lineaValida(const char *l) {
   int separadores;            // Nº de ':' que debe tener la trama
   bool sinDatos = false;      // Tramas de solo código ("3:", "4:", "5:")
@@ -125,9 +116,7 @@ bool lineaValida(const char *l) {
   return true;
 }
 
-/* Procesa una trama del satélite: la reenvía al PC, reinicia el control
- * de comunicación y actualiza los LEDs.
- * Parámetros: linea (trama recibida). Resultado: ninguno. */
+// Procesa una trama del satélite: la reenvía al PC, reinicia el control
 void procesarLineaSatelite(char *linea) {
   if (!lineaValida(linea)) return;
   Serial.println(linea);
@@ -166,8 +155,7 @@ void procesarLineaSatelite(char *linea) {
   }
 }
 
-/* Calcula la posición de reposo del joystick (media de 32 lecturas).
- * Parámetros: ninguno. Resultado: ninguno (actualiza joyCentro). */
+// Calcula la posición de reposo del joystick (media de 32 lecturas).
 void calibrarJoystick() {
   long suma = 0;
   for (int i = 0; i < 32; i++) {
@@ -177,8 +165,7 @@ void calibrarJoystick() {
   joyCentro = suma / 32;
 }
 
-/* Lee el eje X del joystick con histéresis.
- * Parámetros: ninguno. Resultado: -1 (izquierda), 0 (reposo) o 1 (derecha). */
+// Lee el eje X del joystick con histéresis.
 int leerDireccionJoystick() {
   long suma = 0;
   for (byte i = 0; i < 4; i++) suma += analogRead(PIN_JOY_X);
@@ -195,9 +182,7 @@ int leerDireccionJoystick() {
   return dirJoystick;
 }
 
-/* Cada JOY_PERIODO_MS envía 2:<dir> al satélite mientras se mueve el
- * joystick (y un 2:0 al soltarlo).
- * Parámetros: ninguno. Resultado: ninguno. */
+// Cada JOY_PERIODO_MS envía 2:<dir> al satélite mientras se mueve el joystick (y un 2:0 al soltarlo).
 void tareaJoystick() {
   if (millis() - ultimoJoy < JOY_PERIODO_MS) return;
   ultimoJoy = millis();
@@ -210,9 +195,7 @@ void tareaJoystick() {
   dirAnterior = dir;
 }
 
-/* Activa la alarma de comunicación si el satélite lleva TIMEOUT_COM_MS
- * sin enviar nada (el latido llega cada 2 s).
- * Parámetros: ninguno. Resultado: ninguno. */
+// Activa la alarma de comunicación si el satélite lleva TIMEOUT_COM_MS sin enviar nada (el latido llega cada 2 s).
 void tareaTimeoutCom() {
   if (!falloCom && (millis() - ultimoMensajeSat > TIMEOUT_COM_MS)) {
     falloCom = true;
