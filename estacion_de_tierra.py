@@ -20,16 +20,15 @@ from matplotlib.figure import Figure
 import protocolos as P
 from cola_circular import CircularQueue
 
-# Configuración
+# ---------------- Configuración ----------------
 PUERTO = 'COM7'
 BAUDIOS = 9600
 MAX_PUNTOS = 60        # Puntos que se ven en la gráfica de temperatura
 N_MEDIA = 10           # Temperaturas que se usan para la media
 DIST_MAX = 70          # Radio máximo del radar (cm)
 MEMORIA_RADAR = 5      # Segundos que un punto se queda en el radar
-SALTO_MAX = 0         # Si dos puntos están a más grados, no se unen con línea
 
-# Variables globales 
+# ---------------- Variables globales ----------------
 tiempos, temps, hums, medias = [], [], [], []
 cola_temps = CircularQueue(N_MEDIA)
 radar = np.full(360, np.nan)   # Distancia medida en cada grado (NaN = nada)
@@ -46,11 +45,12 @@ umbral = 30.0
 medias_altas = 0               # Medias seguidas por encima del umbral
 
 
-# Funciones de comunicación
+# ================= Funciones de comunicación =================
 
 def enviar(comando):
     """Envía un comando al satélite. Se manda dos veces (la segunda 150 ms
-    después) porque el satélite puede perderlo si llega mientras transmite."""
+    después) porque el satélite puede perderlo si llega mientras transmite.
+    Parámetros: comando (str). Resultado: ninguno."""
     try:
         ser.write((comando + '\n').encode())
         ventana.after(150, lambda: ser.write((comando + '\n').encode()))
@@ -60,7 +60,8 @@ def enviar(comando):
 
 def leer_puerto():
     """Lee todas las líneas que hayan llegado, las procesa y redibuja.
-    Se vuelve a llamar a sí misma cada 100 ms."""
+    Se vuelve a llamar a sí misma cada 100 ms.
+    Parámetros: ninguno. Resultado: ninguno."""
     try:
         while ser.in_waiting > 0:
             linea = ser.readline().decode('utf-8', errors='ignore').strip()
@@ -78,7 +79,8 @@ def leer_puerto():
 
 
 def procesar_linea(linea):
-    """Interpreta una trama recibida según su código (ver protocolos.py)."""
+    """Interpreta una trama recibida según su código (ver protocolos.py).
+    Parámetros: linea (str). Resultado: ninguno."""
     global angulo, ultimo_dato_th
     codigo, campos = P.parsear_trama(linea)
     try:
@@ -129,10 +131,11 @@ def procesar_linea(linea):
         pass                                    # Trama mal formada: se ignora
 
 
-#  Funciones de datos 
+# ================= Funciones de datos =================
 
 def anadir_punto(t, h, media):
-    """Añade un punto a la gráfica de temperatura (máximo MAX_PUNTOS)."""
+    """Añade un punto a la gráfica de temperatura (máximo MAX_PUNTOS).
+    Parámetros: t, h, media (float). Resultado: ninguno."""
     tiempos.append(time.time() - t0)
     temps.append(t)
     hums.append(h)
@@ -142,7 +145,8 @@ def anadir_punto(t, h, media):
 
 
 def anadir_hueco():
-    """Añade un punto vacío (NaN) para que la gráfica muestre un hueco."""
+    """Añade un punto vacío (NaN) para que la gráfica muestre un hueco.
+    Parámetros: ninguno. Resultado: ninguno."""
     if temps and not np.isnan(temps[-1]):
         anadir_punto(np.nan, np.nan, np.nan)
         lbl_temp.config(text="Temperatura: --")
@@ -150,14 +154,16 @@ def anadir_hueco():
 
 
 def guardar_distancia(d, direccion):
-    """Guarda una distancia en el radar (si no hay eco, borra el punto)."""
+    """Guarda una distancia en el radar (si no hay eco, borra el punto).
+    Parámetros: d (cm, negativo = sin eco), direccion (grados). Resultado: ninguno."""
     i = int(round(direccion)) % 360
     radar[i] = d if d >= 0 else np.nan
     radar_t[i] = time.time()
 
 
 def comprobar_umbral(media):
-    """Activa la alarma si hay 3 medias seguidas por encima del umbral."""
+    """Activa la alarma si hay 3 medias seguidas por encima del umbral.
+    Parámetros: media (float). Resultado: ninguno."""
     global medias_altas
     if media > umbral:
         medias_altas += 1
@@ -167,7 +173,8 @@ def comprobar_umbral(media):
 
 
 def poner_alarma(etiqueta, activa, nombre):
-    """Pinta una alarma en rojo (activa) o verde (OK)."""
+    """Pinta una alarma en rojo (activa) o verde (OK).
+    Parámetros: etiqueta (tk.Label), activa (bool), nombre (str). Resultado: ninguno."""
     if activa:
         etiqueta.config(text=nombre + ": FALLO", bg='red')
     else:
@@ -175,7 +182,8 @@ def poner_alarma(etiqueta, activa, nombre):
 
 
 def dibujar():
-    """Actualiza las dos gráficas con los datos actuales."""
+    """Actualiza las dos gráficas con los datos actuales.
+    Parámetros: ninguno. Resultado: ninguno."""
     linea_t.set_data(tiempos, temps)
     linea_h.set_data(tiempos, hums)
     linea_m.set_data(tiempos, medias)
@@ -202,10 +210,11 @@ def dibujar():
     canvas_r.draw_idle()
 
 
-# Funciones de los botones 
+# ================= Funciones de los botones =================
 
 def boton_th():
-    """Para o reanuda el envío de temperatura/humedad."""
+    """Para o reanuda el envío de temperatura/humedad.
+    Parámetros: ninguno. Resultado: ninguno."""
     global th_activo, ultimo_dato_th
     th_activo = not th_activo
     enviar(P.cmd_toggle_th(th_activo))
@@ -218,7 +227,8 @@ def boton_th():
 
 
 def boton_dist():
-    """Para o reanuda el envío de distancias."""
+    """Para o reanuda el envío de distancias.
+    Parámetros: ninguno. Resultado: ninguno."""
     global dist_activo
     dist_activo = not dist_activo
     enviar(P.cmd_toggle_dist(dist_activo))
@@ -226,7 +236,8 @@ def boton_dist():
 
 
 def boton_media():
-    """Cambia dónde se calcula la media (tierra o satélite)."""
+    """Cambia dónde se calcula la media (tierra o satélite).
+    Parámetros: ninguno. Resultado: ninguno."""
     global media_en_satelite
     media_en_satelite = not media_en_satelite
     enviar(P.cmd_origen_media(media_en_satelite))
@@ -234,7 +245,8 @@ def boton_media():
 
 
 def boton_periodos():
-    """Envía los nuevos periodos de T/H y distancia (en segundos)."""
+    """Envía los nuevos periodos de T/H y distancia (en segundos).
+    Parámetros: ninguno. Resultado: ninguno."""
     global periodo_th
     try:
         th = float(ent_per_th.get())
@@ -251,7 +263,8 @@ def boton_periodos():
 
 
 def boton_angulo():
-    """Orienta el radar al ángulo escrito (0-359)."""
+    """Orienta el radar al ángulo escrito (0-359).
+    Parámetros: ninguno. Resultado: ninguno."""
     try:
         ang = int(ent_angulo.get())
     except ValueError:
@@ -264,12 +277,14 @@ def boton_angulo():
 
 
 def boton_rastreo():
-    """Vuelve al modo rastreo (barrido automático)."""
+    """Vuelve al modo rastreo (barrido automático).
+    Parámetros: ninguno. Resultado: ninguno."""
     enviar(P.cmd_modo_auto())
 
 
 def boton_umbral():
-    """Cambia el umbral de la alarma de temperatura."""
+    """Cambia el umbral de la alarma de temperatura.
+    Parámetros: ninguno. Resultado: ninguno."""
     global umbral, medias_altas
     try:
         umbral = float(ent_umbral.get())
@@ -281,11 +296,13 @@ def boton_umbral():
 
 
 def cerrar():
-    """Cierra el puerto serie y la ventana."""
+    """Cierra el puerto serie y la ventana.
+    Parámetros: ninguno. Resultado: ninguno."""
     ser.close()
     ventana.destroy()
 
-# Programa principal
+
+# ================= Programa principal =================
 
 try:
     ser = serial.Serial(PUERTO, BAUDIOS, timeout=0.1)
@@ -297,7 +314,7 @@ ventana = tk.Tk()
 ventana.title("Estación de tierra")
 ventana.protocol("WM_DELETE_WINDOW", cerrar)
 
-# Gráfica de temperatura, humedad y media 
+# --- Gráfica de temperatura, humedad y media ---
 fig_t = Figure(figsize=(5, 3.5))
 ax_t = fig_t.add_subplot(111)
 ax_t.set_title("Temperatura y humedad")
@@ -309,19 +326,19 @@ ax_t.legend(loc='upper left')
 canvas_t = FigureCanvasTkAgg(fig_t, master=ventana)
 canvas_t.get_tk_widget().grid(row=0, column=0)
 
-# Radar 
+# --- Radar ---
 fig_r = Figure(figsize=(4, 3.5))
 ax_r = fig_r.add_subplot(111, projection='polar')
 ax_r.set_title("Radar (cm)")
 ax_r.set_ylim(0, DIST_MAX)
 puntero, = ax_r.plot([], [], 'g-', lw=2)          # Sensor frontal
 puntero_tras, = ax_r.plot([], [], 'g--', lw=1)    # Sensor trasero
-linea_radar, = ax_r.plot([], [], 'o-', color='r', markersize=3)  # Objetos detectados
+linea_radar, = ax_r.plot([], [], 'o', color='r', markersize=3)  # Objetos detectados
 fig_r.tight_layout()
 canvas_r = FigureCanvasTkAgg(fig_r, master=ventana)
 canvas_r.get_tk_widget().grid(row=0, column=1)
 
-#  Datos actuales 
+# --- Datos actuales ---
 f_datos = tk.LabelFrame(ventana, text="Datos")
 f_datos.grid(row=1, column=0, columnspan=2, sticky='ew', padx=5)
 lbl_temp = tk.Label(f_datos, text="Temperatura: --", width=20)
@@ -332,7 +349,7 @@ lbl_modo = tk.Label(f_datos, text="Modo: --", width=16)
 for i, lbl in enumerate([lbl_temp, lbl_hum, lbl_dist, lbl_angulo, lbl_modo]):
     lbl.grid(row=0, column=i, padx=5, pady=3)
 
-# Alarmas
+# --- Alarmas ---
 f_alarmas = tk.LabelFrame(ventana, text="Alarmas")
 f_alarmas.grid(row=2, column=0, columnspan=2, sticky='ew', padx=5)
 lbl_alarma_th = tk.Label(f_alarmas, width=22)
@@ -346,7 +363,7 @@ for i, (lbl, nombre) in enumerate([(lbl_alarma_th, "Sensor T/H"),
     lbl.grid(row=0, column=i, padx=5, pady=3)
     poner_alarma(lbl, False, nombre)
 
-# Controles 
+# --- Controles ---
 f_ctrl = tk.LabelFrame(ventana, text="Controles")
 f_ctrl.grid(row=3, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
 
