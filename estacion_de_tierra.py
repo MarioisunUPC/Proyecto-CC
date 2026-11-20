@@ -48,9 +48,7 @@ medias_altas = 0               # Medias seguidas por encima del umbral
 # Funciones de comunicación 
 
 def enviar(comando):
-    """Envía un comando al satélite. Se manda dos veces (la segunda 150 ms
-    después) porque el satélite puede perderlo si llega mientras transmite.
-    Parámetros: comando (str). Resultado: ninguno."""
+    """Envía un comando al satélite. Se manda dos veces (la segunda 150 ms"""
     try:
         ser.write((comando + '\n').encode())
         ventana.after(150, lambda: ser.write((comando + '\n').encode()))
@@ -60,8 +58,7 @@ def enviar(comando):
 
 def leer_puerto():
     """Lee todas las líneas que hayan llegado, las procesa y redibuja.
-    Se vuelve a llamar a sí misma cada 100 ms.
-    Parámetros: ninguno. Resultado: ninguno."""
+    Se vuelve a llamar a sí misma cada 100 ms."""
     try:
         while ser.in_waiting > 0:
             linea = ser.readline().decode('utf-8', errors='ignore').strip()
@@ -79,8 +76,7 @@ def leer_puerto():
 
 
 def procesar_linea(linea):
-    """Interpreta una trama recibida según su código (ver protocolos.py).
-    Parámetros: linea (str). Resultado: ninguno."""
+    """Interpreta una trama recibida según su código (ver protocolos.py)."""
     global angulo, ultimo_dato_th
     codigo, campos = P.parsear_trama(linea)
     try:
@@ -131,7 +127,7 @@ def procesar_linea(linea):
         pass                                    # Trama mal formada: se ignora
 
 
-# ================= Funciones de datos =================
+# Funciones de datos 
 
 def anadir_punto(t, h, media):
     """Añade un punto a la gráfica de temperatura (máximo MAX_PUNTOS)."""
@@ -192,15 +188,7 @@ def dibujar():
     # Solo se dibujan los puntos medidos hace menos de MEMORIA_RADAR segundos
     recientes = ~np.isnan(radar) & (time.time() - radar_t < MEMORIA_RADAR)
     grados = np.where(recientes)[0]          # Ordenados de 0 a 359
-    xs, ys = [], []
-    for i in range(len(grados)):
-        # Si hay un hueco grande entre dos puntos metemos un NaN para cortar la línea
-        if i > 0 and grados[i] - grados[i - 1] > SALTO_MAX:
-            xs.append(np.nan)
-            ys.append(np.nan)
-        xs.append(np.radians(grados[i]))
-        ys.append(radar[grados[i]])
-    linea_radar.set_data(xs, ys)
+    linea_radar.set_data(np.radians(grados), radar[grados])
     canvas_r.draw_idle()
 
 
