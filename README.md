@@ -68,5 +68,5 @@ Hemos usado la IA como apoyo en la versión 2. Nos ayudó a:
 - Detectar y corregir errores (p. ej. pérdida de comandos por SoftwareSerial, validación de tramas en el Arduino de tierra).
 - Configurar el servo (Timer1) y el joystick (calibración y zona muerta con histéresis).
 - Diseñar las gráficas de la interfaz (temperatura/humedad/media y radar polar).
-- Explicarnos construcciones como el operador ternario (`a if cond else b`; en C++ `cond ? a : b`).
+- Explicarnos construcciones como el operador ternario (`a if cond else b`; en C `cond ? a : b`).
 Hemos revisado y probado todo el código y sabemos explicarlo.
