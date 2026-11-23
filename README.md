@@ -8,7 +8,7 @@ Cada versión entregada está marcada con un *tag*. Para ver el código exacto d
 
 | Versión | Tag | Vídeo | Novedades |
 | --- | --- | --- | --- |
-| Versión 2 (actual) | [`v2`](https://github.com/MarioisunUPC/Proyecto-CC/tree/v2) | [Vídeo Versión 2]([video2](https://youtu.be/rhLB5lbT1cw)) | Radar de 360º con dos HC-SR04 y servo, media de las 10 últimas temperaturas (en tierra o en el satélite), alarma de temperatura alta, cambio de periodos, joystick y alarma de fallo del sensor de distancia |
+| Versión 2 (actual) | [`v2`](https://github.com/MarioisunUPC/Proyecto-CC/tree/v2) | [Vídeo Versión 2](https://youtu.be/rhLB5lbT1cw) | Radar de 360º con dos HC-SR04 y servo, media de las 10 últimas temperaturas (en tierra o en el satélite), alarma de temperatura alta, cambio de periodos, joystick y alarma de fallo del sensor de distancia |
 | Versión 1 | [`v1`](https://github.com/MarioisunUPC/Proyecto-CC/tree/v1) | [Vídeo Versión 1](https://youtu.be/vMR-2T-P4Nw) | Temperatura y humedad con DHT11, gráfica dinámica, parar/reanudar, alarmas de sensor y de comunicación |
 
 ## Estructura del repositorio
